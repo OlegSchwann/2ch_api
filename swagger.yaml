@@ -1,0 +1,940 @@
+---
+swagger: "2.0"
+info:
+  description: "Тестовое задание для реализации проекта \"Форумы\" на курсе по баз\
+    ам данных в\nТехнопарке Mail.ru (https://park.mail.ru).\n"
+  version: "0.1.0"
+  title: "forum"
+basePath: "/api"
+schemes:
+- "http"
+- "https"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /forum/create:
+    post:
+      summary: "Создание форума"
+      description: "Создание нового форума.\n"
+      operationId: "forumCreate"
+      parameters:
+      - in: "body"
+        name: "forum"
+        description: "Данные форума."
+        required: true
+        schema:
+          $ref: "#/definitions/Forum"
+        x-exportParamName: "Forum"
+      responses:
+        201:
+          description: "Форум успешно создан.\nВозвращает данные созданного форума\
+            .\n"
+          schema:
+            $ref: "#/definitions/Forum"
+        404:
+          description: "Владелец форума не найден.\n"
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: "Форум уже присутсвует в базе данных.\nВозвращает данные ра\
+            нее созданного форума.\n"
+          schema:
+            $ref: "#/definitions/Forum"
+  /forum/{slug}/create:
+    post:
+      summary: "Создание ветки"
+      description: "Добавление новой ветки обсуждения на форум.\n"
+      operationId: "threadCreate"
+      parameters:
+      - name: "slug"
+        in: "path"
+        description: "Идентификатор форума."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "Slug"
+      - in: "body"
+        name: "thread"
+        description: "Данные ветки обсуждения."
+        required: true
+        schema:
+          $ref: "#/definitions/Thread"
+        x-exportParamName: "Thread"
+      responses:
+        201:
+          description: "Ветка обсуждения успешно создана.\nВозвращает данные созда\
+            нной ветки обсуждения.\n"
+          schema:
+            $ref: "#/definitions/Thread"
+        404:
+          description: "Автор ветки или форум не найдены.\n"
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: "Ветка обсуждения уже присутсвует в базе данных.\nВозвращае\
+            т данные ранее созданной ветки обсуждения.\n"
+          schema:
+            $ref: "#/definitions/Thread"
+  /forum/{slug}/details:
+    get:
+      summary: "Получение информации о форуме"
+      description: "Получение информации о форуме по его идентификаторе.\n"
+      operationId: "forumGetOne"
+      parameters:
+      - name: "slug"
+        in: "path"
+        description: "Идентификатор форума."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "Slug"
+      responses:
+        200:
+          description: "Информация о форуме.\n"
+          schema:
+            $ref: "#/definitions/Forum"
+        404:
+          description: "Форум отсутсвует в системе.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /forum/{slug}/threads:
+    get:
+      summary: "Список ветвей обсужления форума"
+      description: "Получение списка ветвей обсужления данного форума.\n\nВетви об\
+        суждения выводятся отсортированные по дате создания.\n"
+      operationId: "forumGetThreads"
+      parameters:
+      - name: "slug"
+        in: "path"
+        description: "Идентификатор форума."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "Slug"
+      - name: "limit"
+        in: "query"
+        description: "Максимальное кол-во возвращаемых записей."
+        required: false
+        type: "number"
+        default: 100.0
+        maximum: 10000
+        minimum: 1
+        format: "int32"
+        x-exportParamName: "Limit"
+      - name: "since"
+        in: "query"
+        description: "Дата создания ветви обсуждения, с которой будут выводиться з\
+          аписи\n(ветвь обсуждения с указанной датой попадает в результат выборки\
+          ).\n"
+        required: false
+        type: "string"
+        format: "date-time"
+        x-exportParamName: "Since"
+      - name: "desc"
+        in: "query"
+        description: "Флаг сортировки по убыванию.\n"
+        required: false
+        type: "boolean"
+        x-exportParamName: "Desc"
+      responses:
+        200:
+          description: "Информация о ветках обсуждения на форуме.\n"
+          schema:
+            $ref: "#/definitions/Threads"
+        404:
+          description: "Форум отсутсвует в системе.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /forum/{slug}/users:
+    get:
+      summary: "Пользователи данного форума"
+      description: "Получение списка пользователей, у которых есть пост или ветка\
+        \ обсуждения в данном форуме.\n\nПользователи выводятся отсортированные по\
+        \ nickname в порядке возрастания.\nПорядок сотрировки должен соответсвоват\
+        ь побайтовому сравнение в нижнем регистре.\n"
+      operationId: "forumGetUsers"
+      parameters:
+      - name: "slug"
+        in: "path"
+        description: "Идентификатор форума."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "Slug"
+      - name: "limit"
+        in: "query"
+        description: "Максимальное кол-во возвращаемых записей."
+        required: false
+        type: "number"
+        default: 100.0
+        maximum: 10000
+        minimum: 1
+        format: "int32"
+        x-exportParamName: "Limit"
+      - name: "since"
+        in: "query"
+        description: "Идентификатор пользователя, с которого будут выводиться поль\
+          зоватли\n(пользователь с данным идентификатором в результат не попадает\
+          ).\n"
+        required: false
+        type: "string"
+        format: "identity"
+        x-exportParamName: "Since"
+      - name: "desc"
+        in: "query"
+        description: "Флаг сортировки по убыванию.\n"
+        required: false
+        type: "boolean"
+        x-exportParamName: "Desc"
+      responses:
+        200:
+          description: "Информация о пользователях форума.\n"
+          schema:
+            $ref: "#/definitions/Users"
+        404:
+          description: "Форум отсутсвует в системе.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /post/{id}/details:
+    get:
+      summary: "Получение информации о ветке обсуждения"
+      description: "Получение информации о ветке обсуждения по его имени.\n"
+      operationId: "postGetOne"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Идентификатор сообщения."
+        required: true
+        type: "number"
+        format: "int64"
+        x-exportParamName: "Id"
+      - name: "related"
+        in: "query"
+        description: "Включение полной информации о соответвующем объекте сообщени\
+          я.\n\nЕсли тип объекта не указан, то полная информация об этих объектах\
+          \ не\nпередаётся.\n"
+        required: false
+        type: "array"
+        items:
+          type: "string"
+          enum:
+          - "user"
+          - "forum"
+          - "thread"
+        collectionFormat: "multi"
+        x-exportParamName: "Related"
+      responses:
+        200:
+          description: "Информация о ветке обсуждения.\n"
+          schema:
+            $ref: "#/definitions/PostFull"
+        404:
+          description: "Ветка обсуждения отсутсвует в форуме.\n"
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      summary: "Изменение сообщения"
+      description: "Изменение сообщения на форуме.\n\nЕсли сообщение поменяло текс\
+        т, то оно должно получить отметку `isEdited`.\n"
+      operationId: "postUpdate"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Идентификатор сообщения."
+        required: true
+        type: "number"
+        format: "int64"
+        x-exportParamName: "Id"
+      - in: "body"
+        name: "post"
+        description: "Изменения сообщения."
+        required: true
+        schema:
+          $ref: "#/definitions/PostUpdate"
+        x-exportParamName: "Post"
+      responses:
+        200:
+          description: "Информация о сообщении.\n"
+          schema:
+            $ref: "#/definitions/Post"
+        404:
+          description: "Сообщение отсутсвует в форуме.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /service/clear:
+    post:
+      summary: "Очистка всех данных в базе"
+      description: "Безвозвратное удаление всей пользовательской информации из баз\
+        ы данных.\n"
+      operationId: "clear"
+      consumes:
+      - "application/json"
+      - "application/octet-stream"
+      parameters: []
+      responses:
+        200:
+          description: "Очистка базы успешно завершена"
+  /service/status:
+    get:
+      summary: "Получение инфомарции о базе данных"
+      description: "Получение инфомарции о базе данных.\n"
+      operationId: "status"
+      parameters: []
+      responses:
+        200:
+          description: "Кол-во записей в базе данных, включая помеченные как \"уда\
+            лённые\".\n"
+          schema:
+            $ref: "#/definitions/Status"
+  /thread/{slug_or_id}/create:
+    post:
+      summary: "Создание новых постов"
+      description: "Добавление новых постов в ветку обсуждения на форум.\n\nВсе по\
+        сты, созданные в рамках одного вызова данного метода должны иметь одинаков\
+        ую дату создания (Post.Created).\n"
+      operationId: "postsCreate"
+      parameters:
+      - name: "slug_or_id"
+        in: "path"
+        description: "Идентификатор ветки обсуждения."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "SlugOrId"
+      - in: "body"
+        name: "posts"
+        description: "Список создаваемых постов."
+        required: true
+        schema:
+          $ref: "#/definitions/Posts"
+        x-exportParamName: "Posts"
+      responses:
+        201:
+          description: "Посты успешно созданы.\nВозвращает данные созданных постов\
+            \ в том же порядке, в котором их передали на вход метода.\n"
+          schema:
+            $ref: "#/definitions/Posts"
+        404:
+          description: "Ветка обсуждения отсутствует в базе данных.\n"
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: "Хотя бы один родительский пост отсутсвует в текущей ветке\
+            \ обсуждения.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /thread/{slug_or_id}/details:
+    get:
+      summary: "Получение информации о ветке обсуждения"
+      description: "Получение информации о ветке обсуждения по его имени.\n"
+      operationId: "threadGetOne"
+      parameters:
+      - name: "slug_or_id"
+        in: "path"
+        description: "Идентификатор ветки обсуждения."
+        required: true
+        type: "string"
+        x-exportParamName: "SlugOrId"
+      responses:
+        200:
+          description: "Информация о ветке обсуждения.\n"
+          schema:
+            $ref: "#/definitions/Thread"
+        404:
+          description: "Ветка обсуждения отсутсвует в форуме.\n"
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      summary: "Обновление ветки"
+      description: "Обновление ветки обсуждения на форуме.\n"
+      operationId: "threadUpdate"
+      parameters:
+      - name: "slug_or_id"
+        in: "path"
+        description: "Идентификатор ветки обсуждения."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "SlugOrId"
+      - in: "body"
+        name: "thread"
+        description: "Данные ветки обсуждения."
+        required: true
+        schema:
+          $ref: "#/definitions/ThreadUpdate"
+        x-exportParamName: "Thread"
+      responses:
+        200:
+          description: "Информация о ветке обсуждения.\n"
+          schema:
+            $ref: "#/definitions/Thread"
+        404:
+          description: "Ветка обсуждения отсутсвует в форуме.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /thread/{slug_or_id}/posts:
+    get:
+      summary: "Сообщения данной ветви обсуждения"
+      description: "Получение списка сообщений в данной ветке форуме.\n\nСообщения\
+        \ выводятся отсортированные по дате создания.\n"
+      operationId: "threadGetPosts"
+      parameters:
+      - name: "slug_or_id"
+        in: "path"
+        description: "Идентификатор ветки обсуждения."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "SlugOrId"
+      - name: "limit"
+        in: "query"
+        description: "Максимальное кол-во возвращаемых записей."
+        required: false
+        type: "number"
+        default: 100.0
+        maximum: 10000
+        minimum: 1
+        format: "int32"
+        x-exportParamName: "Limit"
+      - name: "since"
+        in: "query"
+        description: "Идентификатор поста, после которого будут выводиться записи\n\
+          (пост с данным идентификатором в результат не попадает).\n"
+        required: false
+        type: "number"
+        format: "int64"
+        x-exportParamName: "Since"
+      - name: "sort"
+        in: "query"
+        description: "Вид сортировки:\n\n * flat - по дате, комментарии выводятся\
+          \ простым списком в порядке создания;\n * tree - древовидный, комментари\
+          и выводятся отсортированные в дереве\n   по N штук;\n * parent_tree - др\
+          евовидные с пагинацией по родительским (parent_tree),\n   на странице N\
+          \ родительских комментов и все комментарии прикрепленные\n   к ним, в др\
+          еввидном отображение.\n\nПодробности: https://park.mail.ru/blog/topic/view/1191/\n"
+        required: false
+        type: "string"
+        default: "flat"
+        enum:
+        - "flat"
+        - "tree"
+        - "parent_tree"
+        x-exportParamName: "Sort"
+      - name: "desc"
+        in: "query"
+        description: "Флаг сортировки по убыванию.\n"
+        required: false
+        type: "boolean"
+        x-exportParamName: "Desc"
+      responses:
+        200:
+          description: "Информация о сообщениях форума.\n"
+          schema:
+            $ref: "#/definitions/Posts"
+        404:
+          description: "Ветка обсуждения отсутсвует в форуме.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /thread/{slug_or_id}/vote:
+    post:
+      summary: "Проголосовать за ветвь обсуждения"
+      description: "Изменение голоса за ветвь обсуждения.\n\nОдин пользователь учи\
+        тывается только один раз и может изменить своё\nмнение.\n"
+      operationId: "threadVote"
+      parameters:
+      - name: "slug_or_id"
+        in: "path"
+        description: "Идентификатор ветки обсуждения."
+        required: true
+        type: "string"
+        format: "identity"
+        x-exportParamName: "SlugOrId"
+      - in: "body"
+        name: "vote"
+        description: "Информация о голосовании пользователя."
+        required: true
+        schema:
+          $ref: "#/definitions/Vote"
+        x-exportParamName: "Vote"
+      responses:
+        200:
+          description: "Информация о ветке обсуждения.\n"
+          schema:
+            $ref: "#/definitions/Thread"
+        404:
+          description: "Ветка обсуждения отсутсвует в форуме.\n"
+          schema:
+            $ref: "#/definitions/Error"
+  /user/{nickname}/create:
+    post:
+      summary: "Создание нового пользователя"
+      description: "Создание нового пользователя в базе данных.\n"
+      operationId: "userCreate"
+      parameters:
+      - name: "nickname"
+        in: "path"
+        description: "Идентификатор пользователя."
+        required: true
+        type: "string"
+        x-exportParamName: "Nickname"
+      - in: "body"
+        name: "profile"
+        description: "Данные пользовательского профиля."
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+        x-exportParamName: "Profile"
+      responses:
+        201:
+          description: "Пользователь успешно создан.\nВозвращает данные созданного\
+            \ пользователя.\n"
+          schema:
+            $ref: "#/definitions/User"
+        409:
+          description: "Пользователь уже присутсвует в базе данных.\nВозвращает да\
+            нные ранее созданных пользователей с тем же nickname-ом иои email-ом.\n"
+          schema:
+            $ref: "#/definitions/Users"
+  /user/{nickname}/profile:
+    get:
+      summary: "Получение информации о пользователе"
+      description: "Получение информации о пользователе форума по его имени.\n"
+      operationId: "userGetOne"
+      parameters:
+      - name: "nickname"
+        in: "path"
+        description: "Идентификатор пользователя."
+        required: true
+        type: "string"
+        x-exportParamName: "Nickname"
+      responses:
+        200:
+          description: "Информация о пользователе.\n"
+          schema:
+            $ref: "#/definitions/User"
+        404:
+          description: "Пользователь отсутсвует в системе.\n"
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      summary: "Изменение данных о пользователе"
+      description: "Изменение информации в профиле пользователя.\n"
+      operationId: "userUpdate"
+      parameters:
+      - name: "nickname"
+        in: "path"
+        description: "Идентификатор пользователя."
+        required: true
+        type: "string"
+        x-exportParamName: "Nickname"
+      - in: "body"
+        name: "profile"
+        description: "Изменения профиля пользователя."
+        required: true
+        schema:
+          $ref: "#/definitions/UserUpdate"
+        x-exportParamName: "Profile"
+      responses:
+        200:
+          description: "Актуальная информация о пользователе после изменения профи\
+            ля.\n"
+          schema:
+            $ref: "#/definitions/User"
+        404:
+          description: "Пользователь отсутсвует в системе.\n"
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: "Новые данные профиля пользователя конфликтуют с имеющимися\
+            \ пользователями.\n"
+          schema:
+            $ref: "#/definitions/Error"
+definitions:
+  Error:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        example: "Can't find user with id #42\n"
+        description: "Текстовое описание ошибки.\nВ процессе проверки API никаких\
+          \ проверок на содерижимое данного описание не делается.\n"
+        readOnly: true
+  Forum:
+    type: "object"
+    required:
+    - "slug"
+    - "title"
+    - "user"
+    properties:
+      posts:
+        type: "number"
+        format: "int64"
+        example: 200000.0
+        description: "Общее кол-во сообщений в данном форуме.\n"
+        readOnly: true
+      slug:
+        type: "string"
+        format: "identity"
+        example: "pirate-stories"
+        description: "Человекопонятный URL (https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%BC%D0%B0%D0%BD%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_URL),\
+          \ уникальное поле."
+        pattern: "^(\\d|\\w|-|_)*(\\w|-|_)(\\d|\\w|-|_)*$"
+        x-isnullable: false
+      threads:
+        type: "number"
+        format: "int32"
+        example: 200.0
+        description: "Общее кол-во ветвей обсуждения в данном форуме.\n"
+        readOnly: true
+      title:
+        type: "string"
+        example: "Pirate stories"
+        description: "Название форума."
+        x-isnullable: false
+      user:
+        type: "string"
+        format: "identity"
+        example: "j.sparrow"
+        description: "Nickname пользователя, который отвечает за форум."
+        x-isnullable: false
+    description: "Информация о форуме.\n"
+    example:
+      threads: 200.0
+      title: "Pirate stories"
+      posts: 200000.0
+      user: "j.sparrow"
+      slug: "pirate-stories"
+  Post:
+    type: "object"
+    required:
+    - "author"
+    - "message"
+    properties:
+      author:
+        type: "string"
+        format: "identity"
+        example: "j.sparrow"
+        description: "Автор, написавший данное сообщение."
+        x-isnullable: false
+      created:
+        type: "string"
+        format: "date-time"
+        description: "Дата создания сообщения на форуме."
+        readOnly: true
+        x-isnullable: true
+      forum:
+        type: "string"
+        format: "identity"
+        description: "Идентификатор форума (slug) данного сообещния."
+        readOnly: true
+      id:
+        type: "number"
+        format: "int64"
+        description: "Идентификатор данного сообщения."
+        readOnly: true
+      isEdited:
+        type: "boolean"
+        description: "Истина, если данное сообщение было изменено."
+        readOnly: true
+        x-isnullable: false
+      message:
+        type: "string"
+        format: "text"
+        example: "We should be afraid of the Kraken."
+        description: "Собственно сообщение форума."
+        x-isnullable: false
+      parent:
+        type: "number"
+        format: "int64"
+        description: "Идентификатор родительского сообщения (0 - корневое сообщени\
+          е обсуждения).\n"
+      thread:
+        type: "number"
+        format: "int32"
+        description: "Идентификатор ветви (id) обсуждения данного сообещния."
+        readOnly: true
+    description: "Сообщение внутри ветки обсуждения на форуме.\n"
+    example:
+      forum: "forum"
+      parent: 6.02745618307040320615897144307382404804229736328125
+      author: "j.sparrow"
+      created: "2000-01-23T04:56:07.000+00:00"
+      isEdited: true
+      id: 0.80082819046101150206595775671303272247314453125
+      thread: 1.46581298050294517310021547018550336360931396484375
+      message: "We should be afraid of the Kraken."
+  PostFull:
+    type: "object"
+    properties:
+      author:
+        $ref: "#/definitions/User"
+      forum:
+        $ref: "#/definitions/Forum"
+      post:
+        $ref: "#/definitions/Post"
+      thread:
+        $ref: "#/definitions/Thread"
+    description: "Полная информация о сообщении, включая связанные объекты.\n"
+    example:
+      forum:
+        threads: 200.0
+        title: "Pirate stories"
+        posts: 200000.0
+        user: "j.sparrow"
+        slug: "pirate-stories"
+      post:
+        forum: "forum"
+        parent: 6.02745618307040320615897144307382404804229736328125
+        author: "j.sparrow"
+        created: "2000-01-23T04:56:07.000+00:00"
+        isEdited: true
+        id: 0.80082819046101150206595775671303272247314453125
+        thread: 1.46581298050294517310021547018550336360931396484375
+        message: "We should be afraid of the Kraken."
+      author:
+        about: "This is the day you will always remember as the day that you almost\
+          \ caught Captain Jack Sparrow!"
+        nickname: "j.sparrow"
+        fullname: "Captain Jack Sparrow"
+        email: "captaina@blackpearl.sea"
+      thread:
+        forum: "pirate-stories"
+        author: "j.sparrow"
+        created: "2017-01-01T00:00:00.000Z"
+        votes: 0.80082819046101150206595775671303272247314453125
+        id: 42.0
+        message: "An urgent need to reveal the hiding place of Davy Jones. Who is\
+          \ willing to help in this matter?"
+        title: "Davy Jones cache"
+        slug: "jones-cache"
+  PostUpdate:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        format: "text"
+        example: "We should be afraid of the Kraken."
+        description: "Собственно сообщение форума."
+    description: "Сообщение для обновления сообщения внутри ветки на форуме.\nПуст\
+      ые параметры остаются без изменений.\n"
+    example:
+      message: "We should be afraid of the Kraken."
+  Posts:
+    type: "array"
+    items:
+      $ref: "#/definitions/Post"
+  Status:
+    type: "object"
+    required:
+    - "forum"
+    - "post"
+    - "thread"
+    - "user"
+    properties:
+      forum:
+        type: "number"
+        format: "int32"
+        example: 100.0
+        description: "Кол-во разделов в базе данных."
+        x-isnullable: false
+      post:
+        type: "number"
+        format: "int64"
+        example: 1000000.0
+        description: "Кол-во сообщений в базе данных."
+        x-isnullable: false
+      thread:
+        type: "number"
+        format: "int32"
+        example: 1000.0
+        description: "Кол-во веток обсуждения в базе данных."
+        x-isnullable: false
+      user:
+        type: "number"
+        format: "int32"
+        example: 1000.0
+        description: "Кол-во пользователей в базе данных."
+        x-isnullable: false
+    example:
+      forum: 100.0
+      post: 1000000.0
+      thread: 1000.0
+      user: 1000.0
+  Thread:
+    type: "object"
+    required:
+    - "author"
+    - "message"
+    - "title"
+    properties:
+      author:
+        type: "string"
+        format: "identity"
+        example: "j.sparrow"
+        description: "Пользователь, создавший данную тему."
+        x-isnullable: false
+      created:
+        type: "string"
+        format: "date-time"
+        example: "2017-01-01T00:00:00.000Z"
+        description: "Дата создания ветки на форуме."
+        x-isnullable: true
+      forum:
+        type: "string"
+        format: "identity"
+        example: "pirate-stories"
+        description: "Форум, в котором расположена данная ветка обсуждения."
+        readOnly: true
+      id:
+        type: "number"
+        format: "int32"
+        example: 42.0
+        description: "Идентификатор ветки обсуждения."
+        readOnly: true
+      message:
+        type: "string"
+        format: "text"
+        example: "An urgent need to reveal the hiding place of Davy Jones. Who is\
+          \ willing to help in this matter?"
+        description: "Описание ветки обсуждения."
+        x-isnullable: false
+      slug:
+        type: "string"
+        format: "identity"
+        example: "jones-cache"
+        description: "Человекопонятный URL (https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D0%BC%D0%B0%D0%BD%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_URL).\n\
+          В данной структуре slug опционален и не может быть числом.\n"
+        readOnly: true
+        pattern: "^(\\d|\\w|-|_)*(\\w|-|_)(\\d|\\w|-|_)*$"
+      title:
+        type: "string"
+        example: "Davy Jones cache"
+        description: "Заголовок ветки обсуждения."
+        x-isnullable: false
+      votes:
+        type: "number"
+        format: "int32"
+        description: "Кол-во голосов непосредственно за данное сообщение форума."
+        readOnly: true
+    description: "Ветка обсуждения на форуме.\n"
+    example:
+      forum: "pirate-stories"
+      author: "j.sparrow"
+      created: "2017-01-01T00:00:00.000Z"
+      votes: 0.80082819046101150206595775671303272247314453125
+      id: 42.0
+      message: "An urgent need to reveal the hiding place of Davy Jones. Who is willing\
+        \ to help in this matter?"
+      title: "Davy Jones cache"
+      slug: "jones-cache"
+  ThreadUpdate:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        format: "text"
+        example: "An urgent need to reveal the hiding place of Davy Jones. Who is\
+          \ willing to help in this matter?"
+        description: "Описание ветки обсуждения."
+      title:
+        type: "string"
+        example: "Davy Jones cache"
+        description: "Заголовок ветки обсуждения."
+    description: "Сообщение для обновления ветки обсуждения на форуме.\nПустые пар\
+      аметры остаются без изменений.\n"
+    example:
+      message: "An urgent need to reveal the hiding place of Davy Jones. Who is willing\
+        \ to help in this matter?"
+      title: "Davy Jones cache"
+  Threads:
+    type: "array"
+    items:
+      $ref: "#/definitions/Thread"
+  User:
+    type: "object"
+    required:
+    - "email"
+    - "fullname"
+    properties:
+      about:
+        type: "string"
+        format: "text"
+        example: "This is the day you will always remember as the day that you almost\
+          \ caught Captain Jack Sparrow!"
+        description: "Описание пользователя."
+      email:
+        type: "string"
+        format: "email"
+        example: "captaina@blackpearl.sea"
+        description: "Почтовый адрес пользователя (уникальное поле)."
+        x-isnullable: false
+      fullname:
+        type: "string"
+        example: "Captain Jack Sparrow"
+        description: "Полное имя пользователя."
+        x-isnullable: false
+      nickname:
+        type: "string"
+        format: "identity"
+        example: "j.sparrow"
+        description: "Имя пользователя (уникальное поле).\nДанное поле допускает т\
+          олько латиницу, цифры и знак подчеркивания.\nСравнение имени регистронез\
+          ависимо.\n"
+        readOnly: true
+    description: "Информация о пользователе.\n"
+    example:
+      about: "This is the day you will always remember as the day that you almost\
+        \ caught Captain Jack Sparrow!"
+      nickname: "j.sparrow"
+      fullname: "Captain Jack Sparrow"
+      email: "captaina@blackpearl.sea"
+  UserUpdate:
+    type: "object"
+    properties:
+      about:
+        type: "string"
+        format: "text"
+        example: "This is the day you will always remember as the day that you almost\
+          \ caught Captain Jack Sparrow!"
+        description: "Описание пользователя."
+      email:
+        type: "string"
+        format: "email"
+        example: "captaina@blackpearl.sea"
+        description: "Почтовый адрес пользователя (уникальное поле)."
+      fullname:
+        type: "string"
+        example: "Captain Jack Sparrow"
+        description: "Полное имя пользователя."
+    description: "Информация о пользователе.\n"
+    example:
+      about: "This is the day you will always remember as the day that you almost\
+        \ caught Captain Jack Sparrow!"
+      fullname: "Captain Jack Sparrow"
+      email: "captaina@blackpearl.sea"
+  Users:
+    type: "array"
+    items:
+      $ref: "#/definitions/User"
+  Vote:
+    type: "object"
+    required:
+    - "nickname"
+    - "voice"
+    properties:
+      nickname:
+        type: "string"
+        format: "identity"
+        description: "Идентификатор пользователя."
+        x-isnullable: false
+      voice:
+        type: "number"
+        format: "int32"
+        description: "Отданный голос."
+        x-isnullable: false
+    description: "Информация о голосовании пользователя.\n"
+    example:
+      voice: 0.80082819046101150206595775671303272247314453125
+      nickname: "nickname"
