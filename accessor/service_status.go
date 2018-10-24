@@ -1,8 +1,9 @@
 package accessor
 
 import (
-	"2ch_api/types"
 	"github.com/jackc/pgx"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func init() {
@@ -19,7 +20,7 @@ select
 	})
 }
 
-func (cp *ConnPool)ServiceStatus() (status types.Status, err error) {
+func (cp *ConnPool) ServiceStatus() (status types.Status, err error) {
 	err = cp.QueryRow("ServiceStatus").Scan(
 		&status.Forum, &status.Post, &status.Thread, &status.User)
 	return

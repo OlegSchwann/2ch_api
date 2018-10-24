@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
-func (e *Environment)ThreadGetDetails(ctx *fasthttp.RequestCtx) {
+func (e *Environment) ThreadGetDetails(ctx *fasthttp.RequestCtx) {
 	slugOrId := ctx.UserValue("slug_or_id").(string)
 
 	// TODO: logic
@@ -26,4 +27,3 @@ func (e *Environment)ThreadGetDetails(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 	}
 }
-

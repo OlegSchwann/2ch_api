@@ -1,9 +1,10 @@
 package accessor
 
 import (
-	"2ch_api/types"
 	"github.com/jackc/pgx"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func init() {
@@ -48,13 +49,13 @@ func (cp *ConnPool) ForumGetDetails(slag string) (forum types.Forum, err error) 
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			err = &Error{
-				Code: http.StatusNotFound,
+				Code:            http.StatusNotFound,
 				UnderlyingError: err,
 			}
 			return
 		}
 		err = &Error{
-			Code: http.StatusInternalServerError,
+			Code:            http.StatusInternalServerError,
 			UnderlyingError: err,
 		}
 		return

@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"2ch_api/accessor"
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func (e *Environment) ForumGetDetails(ctx *fasthttp.RequestCtx) {

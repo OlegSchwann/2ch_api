@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
-func (e *Environment)ForumGetUsers(ctx *fasthttp.RequestCtx) {
+func (e *Environment) ForumGetUsers(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	queryArgs := ctx.Request.URI().QueryArgs()
 	limit, _ := queryArgs.GetUint("limit")
@@ -32,4 +33,3 @@ func (e *Environment)ForumGetUsers(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 	}
 }
-

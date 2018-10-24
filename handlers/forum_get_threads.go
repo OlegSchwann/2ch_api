@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
-func (e *Environment)ForumGetThreads(ctx *fasthttp.RequestCtx) {
+func (e *Environment) ForumGetThreads(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	if true {
 		responseThread := types.Thread{}

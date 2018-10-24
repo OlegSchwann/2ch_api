@@ -1,4 +1,4 @@
-// Тестовое задание для реализации проекта \"Форумы\" на курсе по базам данных в Технопарке Mail.ru (https://park.mail.ru). 
+// Тестовое задание для реализации проекта \"Форумы\" на курсе по базам данных в Технопарке Mail.ru (https://park.mail.ru).
 
 package main
 
@@ -10,9 +10,9 @@ import (
 	"os"
 	"strconv"
 
-	"2ch_api/accessor"
-	"2ch_api/global_environment"
-	"2ch_api/router"
+	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/global_environment"
+	"github.com/OlegSchwann/2ch_api/router"
 )
 
 func main() {

@@ -1,8 +1,9 @@
 package accessor
 
 import (
-	"2ch_api/types"
 	"github.com/jackc/pgx"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func init() {

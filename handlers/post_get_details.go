@@ -1,15 +1,16 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
-func (e *Environment)PostGetDetails(ctx *fasthttp.RequestCtx) {
+func (e *Environment) PostGetDetails(ctx *fasthttp.RequestCtx) {
 	idString := ctx.UserValue("id").(string)
 	id, _ := strconv.Atoi(idString)
 
@@ -42,4 +43,3 @@ func (e *Environment)PostGetDetails(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 	}
 }
-

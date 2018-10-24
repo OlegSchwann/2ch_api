@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"2ch_api/accessor"
-	"2ch_api/types"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func (e *Environment) ForumCreate(ctx *fasthttp.RequestCtx) {
@@ -46,7 +47,7 @@ func (e *Environment) ForumCreate(ctx *fasthttp.RequestCtx) {
 			ctx.Response.Header.SetStatusCode(http.StatusConflict)
 			return
 		}
-		if accessorError.Code == http.StatusNotFound{
+		if accessorError.Code == http.StatusNotFound {
 			response, _ := types.Error{
 				Message: "user '" + requestForum.User + "' not found: " + err.Error(),
 			}.MarshalJSON()

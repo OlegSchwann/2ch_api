@@ -1,6 +1,6 @@
 package handlers
 
-import "2ch_api/global_environment"
+import "github.com/OlegSchwann/2ch_api/global_environment"
 
 type Environment struct {
 	global_environment.Environment

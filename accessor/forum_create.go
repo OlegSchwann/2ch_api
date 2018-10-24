@@ -1,10 +1,11 @@
 package accessor
 
 import (
-	"2ch_api/types"
 	"fmt"
 	"github.com/jackc/pgx"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func init() {

@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 // truncate table для всех таблиц, быстро уничтожает данные.
-func (e *Environment)ServiceClear(ctx *fasthttp.RequestCtx) {
+func (e *Environment) ServiceClear(ctx *fasthttp.RequestCtx) {
 	err := e.ConnPool.ServiceClear()
 	if err != nil {
 		response, _ := types.Error{
