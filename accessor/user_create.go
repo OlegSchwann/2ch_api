@@ -1,8 +1,9 @@
 package accessor
 
 import (
-	"2ch_api/types"
 	"github.com/jackc/pgx"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func (cp *ConnPool) UserCreate(user types.User) (err error, conflictUsers types.
 		if err.(pgx.PgError).Code == "23505" {
 			// if "Duplicate key value violates unique constraint, key already exists."
 			var rows *pgx.Rows
-			rows, err = cp.Query("UserCreateConflict",  user.Nickname, user.Email)
+			rows, err = cp.Query("UserCreateConflict", user.Nickname, user.Email)
 			defer rows.Close()
 			for rows.Next() {
 				user := types.User{}

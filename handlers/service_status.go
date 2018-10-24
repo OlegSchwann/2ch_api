@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func (e *Environment) ServiceStatus(ctx *fasthttp.RequestCtx) {

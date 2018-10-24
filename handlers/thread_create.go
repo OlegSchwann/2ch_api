@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
-func (e *Environment)ThreadCreate(ctx *fasthttp.RequestCtx) {
+func (e *Environment) ThreadCreate(ctx *fasthttp.RequestCtx) {
 	// slug := ctx.UserValue("slug").(string)
 	requestThread := types.Thread{}
 	err := requestThread.UnmarshalJSON(ctx.Request.Body())
@@ -26,4 +27,3 @@ func (e *Environment)ThreadCreate(ctx *fasthttp.RequestCtx) {
 	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 }
-

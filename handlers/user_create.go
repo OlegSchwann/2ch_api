@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
+
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
-func (e *Environment)UserCreate(ctx *fasthttp.RequestCtx) {
+func (e *Environment) UserCreate(ctx *fasthttp.RequestCtx) {
 	requestUser := types.User{}
 	err := requestUser.UnmarshalJSON(ctx.Request.Body())
 	if err != nil {
@@ -20,7 +21,7 @@ func (e *Environment)UserCreate(ctx *fasthttp.RequestCtx) {
 	}
 	requestUser.Nickname = ctx.UserValue("nickname").(string)
 
-    err, conflictedUsers := e.ConnPool.UserCreate(requestUser)
+	err, conflictedUsers := e.ConnPool.UserCreate(requestUser)
 	if err != nil {
 		response, _ := types.Error{
 			Message: "server error: " + err.Error(),
@@ -30,7 +31,7 @@ func (e *Environment)UserCreate(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}
-	if len(conflictedUsers) != 0{
+	if len(conflictedUsers) != 0 {
 		response, _ := conflictedUsers.MarshalJSON()
 		ctx.Write(response)
 		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
