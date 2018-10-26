@@ -16,9 +16,9 @@ func RegisterHandlers(environment *global_environment.Environment) (router *fast
 	router.GET("/api/forum/:slug/details", env.ForumGetDetails)
 	router.GET("/api/forum/:slug/threads", env.ForumGetThreads)
 	router.GET("/api/forum/:slug/users", env.ForumGetUsers)
-	router.POST("/api/forum/:slug/create", env.ThreadCreate)
+	router.POST("/api/forum/:slug/create", env.ThreadCreate) //
 	router.POST("/api/thread/:slug_or_id/create", env.PostsCreate)
-	router.GET("/api/thread/:slug_or_id/details", env.ThreadGetDetails)
+	router.GET("/api/thread/:slug_or_id/details", env.ThreadGetDetails) //
 	router.POST("/api/thread/:slug_or_id/details", env.ThreadUpdateDetails)
 	router.GET("/api/thread/:slug_or_id/posts", env.ThreadGetPosts)
 	router.POST("/api/thread/:slug_or_id/vote", env.ThreadVote)
