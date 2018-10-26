@@ -18,11 +18,11 @@ create table if not exists "user" (
     -- Данное поле допускает только латиницу, цифры и знак подчеркивания.
     -- Сравнение имени регистронезависимо (индекс "user_nickname_lower_unique").
     -- Не должно изменяться при обновлении.
-  "about"    text null,
-    -- Описание пользователя.
+  "about"    text   not null,
+    -- Описание пользователя. Необязательное, может быть равно ''.
   "email"    citext not null unique,
     -- Почтовый адрес пользователя.
-  "fullname" text not null
+  "fullname" text   not null
     -- Полное имя пользователя.
 );
 
@@ -30,28 +30,30 @@ create table if not exists "user" (
 create table if not exists "forum" (
   "slug"  citext primary key,
     -- https://ru.wikipedia.org/wiki/Семантический_URL
-  "title" text not null,
+  "title" text   not null,
     -- Название форума.
   "user"  citext not null references "user" ("nickname")
 );
 
 -- Ветка обсуждения на форуме.
 create table if not exists "thread" (
+  "author"  citext not null references "user"("nickname"),
+    -- Пользователь, создавший данную тему.
+  "created" timestamp with time zone not null ,
+    -- Дата создания ветки на форуме.
+  "forum"   citext references "forum" ("slug") not null,
+    -- Форум, в котором расположена данная ветка обсуждения.
   "id"      serial4 primary key,
     -- Идентификатор ветки обсуждения.
-  "author"  citext not null,
-    -- Пользователь, создавший данную тему.
-  "created" timestamp with time zone,
-    -- Дата создания ветки на форуме.
-  "forum"   citext references "forum" ("slug"),
-    -- Форум, в котором расположена данная ветка обсуждения.
   "message" text not null,
     -- Описание ветки обсуждения.
-  "slug"    citext null,
-    -- https://ru.wikipedia.org/wiki/Семантический_URL, опциональная строка.
+  "slug"    citext not null,
+    -- https://ru.wikipedia.org/wiki/Семантический_URL, опциональная строка, может быть равна ''.
   "title"   text not null
     -- Заголовок ветки обсуждения.
 );
+
+create unique index if not exists "thread_slug_unique" on "thread"("slug") where "slug" <> '';
 
 -- Информация о голосовании пользователя.
 create table if not exists "vote" (
