@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"time"
-
-	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func (e *Environment) ForumGetThreads(ctx *fasthttp.RequestCtx) {
@@ -33,29 +31,25 @@ func (e *Environment) ForumGetThreads(ctx *fasthttp.RequestCtx) {
 			}
 		}
 	}
-
-	fmt.Print("\nslug=", slug, " limit=", limit, " since=", since, " desc=", desc)
-
 	threads, err := e.ConnPool.ForumGetThreads(slug, limit, since, desc)
-
 	if err != nil {
 		accessorError := err.(*accessor.Error)
 		if accessorError.Code == http.StatusNotFound {
 			response, _ := types.Error{
-				Message: "Not found threads in forum '" + slug + "': " + accessorError.Error(),
+				Message: "forum '" + slug + "' not found",
 			}.MarshalJSON()
 			ctx.Write(response)
 			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 		}
-	} else {
-		response := []byte("[]")
-		if len(threads) != 0 {
-			response, _ = threads.MarshalJSON()
-		}
-		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
-		ctx.Response.Header.SetStatusCode(http.StatusOK)
+		return
 	}
+	response := []byte("[]")
+	if len(threads) != 0 {
+		response, _ = threads.MarshalJSON()
+	}
+	ctx.Write(response)
+	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	ctx.Response.Header.SetStatusCode(http.StatusOK)
 	return
 }

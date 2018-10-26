@@ -52,7 +52,7 @@ func main() {
 			Database: env.Config["database"],
 			Logger:   env.Logger,
 		},
-		MaxConnections: 5,
+		MaxConnections: 8, // именно во столько будет проводиться нагрузочное тестирование.
 		// Создаём таблицы в базе данных,
 		// Компилируем sql запросы для каждого соединения после их установления.
 		AfterConnect: env.Prep.Execute,

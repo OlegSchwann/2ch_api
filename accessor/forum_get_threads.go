@@ -12,6 +12,20 @@ func init() {
 		// language=PostgreSQL
 		sql := `
 select
+  count(*)
+from
+  "forum"
+where
+  "slug" = $1
+;
+`
+		_, err = conn.Prepare("ForumGetThreadsCheckForumExist", sql)
+		return
+	})
+	Prep.add(func(conn *pgx.Conn) (err error) {
+		// language=PostgreSQL
+		sql := `
+select
   "author",
   "created",
   "forum",
@@ -60,6 +74,24 @@ limit
 
 func (cp *ConnPool) ForumGetThreads(slug string, limit int, since time.Time, desc bool) (
 	threads types.Threads, err error) {
+	{
+		forumCount := 0
+		err = cp.QueryRow("ForumGetThreadsCheckForumExist", slug).Scan(&forumCount)
+		if err != nil {
+			err = &Error{
+				Code:            http.StatusInternalServerError,
+				UnderlyingError: err,
+			}
+			return
+		}
+		if forumCount == 0 {
+			err = &Error{
+				Code:            http.StatusNotFound,
+				UnderlyingError: nil,
+			}
+			return
+		}
+	}
 	var rows *pgx.Rows
 	if desc {
 		rows, err = cp.Query("ForumGetThreadsSortedDesc", slug, limit, since)
