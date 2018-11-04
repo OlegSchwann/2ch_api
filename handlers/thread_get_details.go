@@ -23,7 +23,7 @@ func (e *Environment) ThreadGetDetails(ctx *fasthttp.RequestCtx) {
 		accessorError := err.(*accessor.Error)
 		if accessorError.Code == http.StatusNotFound {
 			response, _ := types.Error{
-				Message: "Thread '" + slugOrId + "' not found: " + err.Error(),
+				Message: "ThreadId '" + slugOrId + "' not found: " + err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
 			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")

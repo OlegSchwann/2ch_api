@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/OlegSchwann/2ch_api/accessor"
 	"github.com/valyala/fasthttp"
 	"net/http"
 
@@ -11,7 +12,8 @@ func (e *Environment) UserGetProfile(ctx *fasthttp.RequestCtx) {
 	nickname := ctx.UserValue("nickname").(string)
 	user, err := e.ConnPool.UserGetProfile(nickname)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		accessorError := err.(*accessor.Error)
+		if accessorError.Code == http.StatusNotFound {
 			response, _ := types.Error{
 				Message: "Can't find user with nickname '" + nickname + "'.",
 			}.MarshalJSON()

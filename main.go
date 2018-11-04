@@ -32,6 +32,7 @@ func main() {
 		"password": "",
 		"database": "postgres",
 	}
+	// TODO: сделать отдельный запрос инициализации.
 	// устанавливаем соединение с базой данных
 	pool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
@@ -57,6 +58,7 @@ func main() {
 		// Компилируем sql запросы для каждого соединения после их установления.
 		AfterConnect: env.Prep.Execute,
 	})
+
 	if err != nil {
 		log.Crit("Unable to create connection pool", "error", err)
 		os.Exit(1)

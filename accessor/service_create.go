@@ -53,6 +53,8 @@ create table if not exists "thread" (
     -- Заголовок ветки обсуждения.
 
 -- Не нормализовано.
+  "votes"              integer                  not null default 0,
+    -- суммарное количество голосов за и против треда. Подерживается триггером при изменении в "vote".
   "number_of_children" integer                  not null default 0
     -- количество постов первого уровня в цепочке обсуждений. 
 );
@@ -61,13 +63,16 @@ create unique index if not exists "thread_slug_unique" on "thread"("slug") where
 
 -- Информация о голосовании пользователя.
 create table if not exists "vote" (
-  "nickname" citext     not null references "user" ("nickname"),
+  "nickname"  citext   not null references "user" ("nickname"),
     -- Идентификатор пользователя.
-  "voice"    smallint not null,
+  "voice"     smallint not null,
     -- Отданный голос ∈ [1, -1].
-  "id"       integer  not null references "thread" ("id")
+  "thread_id" integer  not null references "thread" ("id")
     -- Идентификатор ветки обсуждения на форуме.
 );
+
+-- Каждый пользователь за один тред может проголосовать не более одного раза, но может изменить своё мнение.
+create unique index if not exists "vote_nickname_id_unique" on "vote" ("nickname", "thread_id"); 
 
 -- Посты в ветке обсуждения на форуме.
 create table if not exists "post" (
@@ -99,23 +104,17 @@ create table if not exists "post" (
     -- Количество детей для быстрого вычисления материализованного пути потомка.
 );
 
--- new (вставляемая строка) гарантированно содержит:
---   "thread_id" или "thread_slug"
---   "author"
---   "created" -- вставляется на стороне application server
---   "message"  
---   "parent" -- может быть равно 0, если сообщение корневое
+-- оптимизация префиксного сравнения select * from "post" where "thread_id" = 1 && "materialized_path" => '0001' && "materialized_path" < '0003';
+-- отлавливает неверные материализованные пути, появляющиеся при гонке данных.
+create unique index if not exists "post_materialized_path" on "post" ("thread_id",   "materialized_path");
 
--- не нуждаются в триггере
---   "id" -- добавляется самостоятельно из serial
---   "is_edited" -- по умолчанию false
-	
--- поддерживаются триггером:
---   "forum" -- берётся из "thread"."forum" 
---   "materialized_path"
---   "number_of_children" -- важно обновить для родительского сообщения.
+-- для сортировки комментариев по дате (flat)
+create unique index if not exists "post_materialized_path" on "post" ("thread_id", "created");
+
 
 /* Структура для быстрого нахождения дерева коммкетариев:
+количество потомков - количество реальных потомков, первоначально равно 0.
+отсчёт материализованного пути начинается с 1, количество потомков всегда рано номеру последнего потомка
 ┌─────────┬──────────────────────┬────────┐
 │структура│Материализованный путь│потомков│
 ├─────────┼──────────────────────┼────────┤
@@ -148,72 +147,6 @@ create table if not exists "post" (
 │ z       │ 06                   │ 0      │
 └─────────┴──────────────────────┴────────┘
 */
-
-create or replace function "post_consistency_support"() returns trigger as $$
-declare
-  "parent_number_of_children" integer;
-  "parent_materialized_path" text;
-begin
-  -- Восстанавливаем "thread_id" по "thread_slug" или "thread_slug" по "thread_id"
-  if (new."thread_id" <> 0) then
-    select "forum", "slug"
-    into new."forum", new."thread_slug"
-    from "thread"
-    where "id" = new."thread_id";
-
-    if (new."forum" is null) then
-      raise exception sqlstate '23503' using message = 'can not find "thread" where "id" = ' || new."thread_id";
-    end if;
-  else -- if (new."thread_slug" <> '')
-    select "forum", "id"
-    into new."forum", new."thread_id"
-    from "thread"
-    where "slug" = new."thread_slug";
-
-    if (new."forum" is null) then
-      raise exception sqlstate '23503' using message = 'can not find "thread" where "slug" = ' || new."thread_slug";
-    end if;
-  end if;
-
-  -- Находим и инкрементируем количество детей у родительских элементов.
-  -- Осуществляем сборку материализованного пути.
-  if (new."parent" = 0) then
-    update "thread"
-    set "number_of_children" = "number_of_children" + 1
-    where "id" = new."thread_id"
-    returning "number_of_children"
-    into "parent_number_of_children";
-
-    if ("parent_number_of_children" is null) then
-      -- поддерживаем целостность внешнего ключа - падаем, если не нашли родителя.
-      raise exception sqlstate '23503' using message = 'can not find "post" where "parent" = ' || new."parent";
-    end if;
-
-    new."materialized_path" = to_char("parent_number_of_children", 'FM0000');
-  else
-    update "post"
-    set "number_of_children" = "number_of_children" + 1
-    where "id" = new."parent"
-    returning "number_of_children", "materialized_path"
-    into "parent_number_of_children", "parent_materialized_path";
-
-    if ("parent_number_of_children" is null) then
-      -- поддерживаем целостность внешнего ключа - падаем, если не нашли родителя.
-      raise exception sqlstate '23503' using message = 'can not find "post" where "parent" = ' || new."parent";
-    end if;
-
-    new."materialized_path" = concat("parent_materialized_path", '.', to_char("parent_number_of_children", 'FM0000'));
-  end if;
-  return new;
-end;
-$$ language plpgsql;
-
-drop trigger if exists "post_consistency_support_trigger" on "post";
-
-create trigger "post_consistency_support_trigger"
-  before insert on "post"
-  for each row
-execute procedure "post_consistency_support"();
 
 commit;`
 		_, err = conn.Exec(sql)
