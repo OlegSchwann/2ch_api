@@ -18,7 +18,6 @@ func (e *Environment) UserGetProfile(ctx *fasthttp.RequestCtx) {
 				Message: "Can't find user with nickname '" + nickname + "'.",
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 			return
 		}
@@ -26,12 +25,10 @@ func (e *Environment) UserGetProfile(ctx *fasthttp.RequestCtx) {
 			Message: "Internal server error: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}
 	response, _ := user.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 }

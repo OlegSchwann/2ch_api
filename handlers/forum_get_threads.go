@@ -39,7 +39,6 @@ func (e *Environment) ForumGetThreads(ctx *fasthttp.RequestCtx) {
 				Message: "forum '" + slug + "' not found",
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 		}
 		return
@@ -49,7 +48,6 @@ func (e *Environment) ForumGetThreads(ctx *fasthttp.RequestCtx) {
 		response, _ = threads.MarshalJSON()
 	}
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 	return
 }

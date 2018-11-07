@@ -29,19 +29,16 @@ func (e *Environment) ThreadCreate(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 			return
 		case http.StatusConflict:
 			response, _ := responseThread.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusConflict)
 			return
 		}
 	}
 	response, err := responseThread.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusCreated)
 }

@@ -26,14 +26,12 @@ func (e *Environment) ThreadGetDetails(ctx *fasthttp.RequestCtx) {
 				Message: "ThreadId '" + slugOrId + "' not found: " + err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 		}
 		return
 	}
 	response, _ := responseThread.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 	return
 }

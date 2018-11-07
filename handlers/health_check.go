@@ -8,9 +8,9 @@ import (
 )
 
 func (e *Environment)HealthCheck(ctx *fasthttp.RequestCtx) {
-	fmt.Fprint(ctx, ""+
+	fmt.Fprint(ctx, "\""+
 		"Golang сервер работает на машине '"+
 		func() (name string) { name, _ = os.Hostname(); return }()+
 		" под номером процесса "+
-		strconv.Itoa(os.Getegid())+".")
+		strconv.Itoa(os.Getegid())+"\"")
 }

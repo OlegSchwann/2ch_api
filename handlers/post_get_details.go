@@ -19,7 +19,6 @@ func (e *Environment) PostGetDetails(ctx *fasthttp.RequestCtx) {
 			Message: "post identificator '" + postStringId + "' must be integer",
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusUnprocessableEntity)
 	}
 	related := string(ctx.URI().QueryArgs().Peek("related"))
@@ -38,7 +37,6 @@ func (e *Environment) PostGetDetails(ctx *fasthttp.RequestCtx) {
 				Message: "Can't find Post with id '" + postStringId + "'.",
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 			return
 		}
@@ -52,7 +50,6 @@ func (e *Environment) PostGetDetails(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
@@ -66,7 +63,6 @@ func (e *Environment) PostGetDetails(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
@@ -80,14 +76,12 @@ func (e *Environment) PostGetDetails(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
 	}
 	response, _ := postDetails.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 	return
 }

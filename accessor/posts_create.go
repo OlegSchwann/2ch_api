@@ -239,7 +239,17 @@ func (cp *ConnPool) PostsCreateInsert(
 	tread types.Thread, parentPost PostConnections, posts types.Posts) (
 	responsePosts types.Posts, err error) {
 	// всё добавление постов в одну транзакцию.
+
 	tx, err := cp.Begin()
+	defer func() { // необходимо быть уверенным, что транзакция завершится.
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+		return
+	}()
+
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -253,7 +263,6 @@ func (cp *ConnPool) PostsCreateInsert(
 			Code:            http.StatusInternalServerError,
 			UnderlyingError: err,
 		}
-		_ = tx.Rollback()
 		return
 	}
 	for key, value := range parentPost {
@@ -263,7 +272,6 @@ func (cp *ConnPool) PostsCreateInsert(
 				Code:            http.StatusInternalServerError,
 				UnderlyingError: err,
 			}
-			_ = tx.Rollback()
 			return
 		}
 	}
@@ -300,12 +308,10 @@ func (cp *ConnPool) PostsCreateInsert(
 					UnderlyingError: err,
 				}
 			}
-			_ = tx.Rollback()
 			return
 		}
 		responsePosts = append(responsePosts, responsePost)
 	}
-	err = tx.Commit()
 	return
 }
 

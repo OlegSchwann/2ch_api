@@ -26,7 +26,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 			Message: "Can not parse json: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusUnprocessableEntity)
 	}
 
@@ -42,7 +41,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 					Message: err.Error(),
 				}.MarshalJSON()
 				ctx.Write(response)
-				ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 				ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 				return
 			}
@@ -50,7 +48,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
@@ -70,7 +67,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 						Message: err.Error(),
 					}.MarshalJSON()
 					ctx.Write(response)
-					ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 					ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 					return
 				}
@@ -78,7 +74,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 					Message: err.Error(),
 				}.MarshalJSON()
 				ctx.Write(response)
-				ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 				ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 				return
 			}
@@ -88,14 +83,12 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 					Message: err.Error(),
 				}.MarshalJSON()
 				ctx.Write(response)
-				ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 				ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 				return
 			}
 			// возвращаем корректный код.
 			response, _ := thread.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusOK)
 			return
 		}
@@ -103,7 +96,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 			Message: err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}
@@ -116,13 +108,11 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
 		response, _ := thread.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusOK)
 		return
 	}
@@ -133,7 +123,6 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 			Message: err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}
@@ -144,13 +133,11 @@ func (e *Environment) ThreadVote(ctx *fasthttp.RequestCtx) {
 			Message: err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}
 	response, _ := thread.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 	return
 }

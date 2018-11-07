@@ -15,7 +15,6 @@ func (e *Environment) UserCreate(ctx *fasthttp.RequestCtx) {
 			Message: "Unable unmarshal json: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusBadRequest)
 		return
 	}
@@ -27,19 +26,16 @@ func (e *Environment) UserCreate(ctx *fasthttp.RequestCtx) {
 			Message: "server error: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}
 	if len(conflictedUsers) != 0 {
 		response, _ := conflictedUsers.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusConflict)
 		return
 	}
 	response, _ := requestUser.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusCreated)
 }

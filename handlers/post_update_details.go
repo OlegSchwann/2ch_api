@@ -23,7 +23,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 			Message: "post identificator '" + postStringId + "' must be integer",
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusUnprocessableEntity)
 		return
 	} //endregion
@@ -35,7 +34,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 			Message: "unable to parse json: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusUnprocessableEntity)
 		return
 	} //endregion
@@ -49,7 +47,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 				Message: "can not find post '" + postStringId + "': " + err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 			return
 		}
@@ -57,7 +54,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 			Message: err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	} //endregion
@@ -66,7 +62,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 	if postUpdate.Message == nil {
 		response, _ := post.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusOK)
 		return
 	}
@@ -75,7 +70,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 	if *postUpdate.Message == post.Message {
 		response, _ := post.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusOK)
 		return
 	}
@@ -86,7 +80,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 			Message: err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	} //endregion
@@ -96,7 +89,6 @@ func (e *Environment) PostUpdateDetails(ctx *fasthttp.RequestCtx) {
 
 	response, _ := post.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusOK)
 	return
 }

@@ -17,7 +17,6 @@ func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
 			Message: err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusBadRequest)
 		return
 	}
@@ -27,7 +26,6 @@ func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
 	case accessor.StatusOk:
 		response, _ := responseUser.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusOK)
 		return
 	case accessor.StatusConflict:
@@ -35,7 +33,6 @@ func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
 			Message: "Conflict with other user: '" + requestUser.Nickname + "'",
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusConflict)
 		return
 	case accessor.StatusNotFound:
@@ -43,7 +40,6 @@ func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
 			Message: "Can not found user '" + requestUser.Nickname + "'",
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 		return
 	case accessor.StatusInternalServerError:
@@ -51,7 +47,6 @@ func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
 			Message: "Internal serer error: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 		return
 	}

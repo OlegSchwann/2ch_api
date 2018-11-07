@@ -2,18 +2,13 @@ package handlers
 
 import (
 	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/shared_helpers"
 	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
-
-func zeroPad(integer uint, overallLen int) string {
-	num := strconv.FormatUint(uint64(integer), 10)
-	return strings.Repeat("0", overallLen-len(num)) + num
-}
 
 func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 	// вытаскиваем из запроса все возможные данные.
@@ -23,7 +18,6 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 			Message: "unable to parse json: " + err.Error(),
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusUnprocessableEntity)
 		return
 	}
@@ -44,7 +38,6 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 					Message: "unable find forum '" + slugOrId + "' : " + err.Error(),
 				}.MarshalJSON()
 				ctx.Write(response)
-				ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 				ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 				return
 			}
@@ -52,15 +45,13 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 				Message: err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
 	}
 	{
 		if len(posts) == 0 {
-			ctx.Write([]byte("[]"))
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
+			ctx.WriteString("[]")
 			ctx.Response.Header.SetStatusCode(http.StatusCreated)
 			return
 		}
@@ -107,7 +98,7 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 		for i := range posts {
 			if posts[i].Parent == 0 { // если родитель - thread
 				thread.NumberOfChildren ++
-				posts[i].MaterializedPath = zeroPad(uint(thread.NumberOfChildren), 6)
+				posts[i].MaterializedPath = shared_helpers.ZeroPad(uint(thread.NumberOfChildren), 6)
 			} else { // если родитель - post
 			    parentId := posts[i].Parent
 				parentPostConnections := postsConnections[parentId]
@@ -118,13 +109,12 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 						Message: "Parent post was created in another thread: ",
 					}.MarshalJSON()
 					ctx.Write(response)
-					ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 					ctx.Response.Header.SetStatusCode(http.StatusConflict)
 					return
 				}
 				parentPostConnections.NumberOfChildren ++
 				posts[i].MaterializedPath = parentPostConnections.MaterializedPath + "." +
-					zeroPad(uint(parentPostConnections.NumberOfChildren), 6)
+					shared_helpers.ZeroPad(uint(parentPostConnections.NumberOfChildren), 6)
 				postsConnections[parentId] = parentPostConnections
 			}
 		}
@@ -140,7 +130,6 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 				Message: "Not found: " + err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 			return
 		}
@@ -149,14 +138,12 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 				Message: "Server error: " + err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 			return
 		}
 	}
 	response, _ := responsePosts.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusCreated)
 	return
 }

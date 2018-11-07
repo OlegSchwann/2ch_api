@@ -37,13 +37,11 @@ func (e *Environment) ForumCreate(ctx *fasthttp.RequestCtx) {
 					Message: "Internal server error: " + err.Error(),
 				}.MarshalJSON()
 				ctx.Write(response)
-				ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 				ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
 				return
 			}
 			response, err := responseForum.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusConflict)
 			return
 		}
@@ -52,14 +50,12 @@ func (e *Environment) ForumCreate(ctx *fasthttp.RequestCtx) {
 				Message: "user '" + requestForum.User + "' not found: " + err.Error(),
 			}.MarshalJSON()
 			ctx.Write(response)
-			ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 			return
 		}
 	}
 	response, err := responseForum.MarshalJSON()
 	ctx.Write(response)
-	ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	ctx.Response.Header.SetStatusCode(http.StatusCreated)
 	return
 }

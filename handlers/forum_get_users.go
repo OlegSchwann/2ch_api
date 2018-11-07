@@ -22,14 +22,12 @@ func (e *Environment) ForumGetUsers(ctx *fasthttp.RequestCtx) {
 		responseUsers := types.Users{}
 		response, _ := responseUsers.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusOK)
 	} else {
 		response, _ := types.Error{
 			Message: "Can't find user with id '" + slug + "'.",
 		}.MarshalJSON()
 		ctx.Write(response)
-		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		ctx.Response.Header.SetStatusCode(http.StatusNotFound)
 	}
 }
