@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/log/log15adapter"
 	"github.com/valyala/fasthttp"
 	log "gopkg.in/inconshreveable/log15.v2"
+	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -16,41 +17,38 @@ import (
 )
 
 func main() {
-	// создаём хранилище глобальных переменных
+	// Создаём хранилище глобальных переменных.
 	env := global_environment.Environment{}
-	// инициализируем логгер
+
+	// Инициализируем логгер, результаты выводятся в stdout.
 	env.Logger = log15adapter.NewLogger(log.New("module", "pgx"))
-	// вытаскиваем статический объект из пакета.
-	// Это фасад для выражений, которые надо подготовить в базе данных.
+
+	// Вытаскиваем статический объект пакета,
+	// агрегатор SQL выражений, которые надо подготовить в базе данных.
 	env.Prep = &accessor.Prep
-	// парсим конфиг
-	env.Config = map[string]string{
-		// TODO: парсить из файла и проверять наличие необходимых полей.
-		"host":     "127.0.0.1",
-		"port":     "5432",
-		"user":     "postgres",
-		"password": "",
-		"database": "postgres",
+
+	// Парсим конфиг из файла config.json, что лежит рядом с бинарником.
+	configBytes, err := ioutil.ReadFile("./config.json")
+	if err != nil {
+		log.Crit("unable to open configuration file ./config.json : "+
+			"are you sure it is near this executable file? : "+err.Error())
+		os.Exit(1)
 	}
-	// TODO: сделать отдельный запрос инициализации.
-	// устанавливаем соединение с базой данных
+	err = env.Config.UnmarshalJSON(configBytes)
+	if err != nil {
+		log.Crit("unable to parse configuration file ./config.json : "+
+			"it should be json with all fields : "+err.Error())
+		os.Exit(1)
+	}
+
+	// Устанавливаем соединение с базой данных.
 	pool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
-			Host: env.Config["host"],
-			Port: func() (port uint16) {
-				if portString, ok := env.Config["port"]; ok {
-					port, err := strconv.Atoi(portString)
-					if err != nil || port > 65535 || port < 1 {
-						panic("port must be 1-65535, default 5432, got '" + portString + "'.")
-					}
-				} else {
-					port = 5432
-				}
-				return
-			}(),
-			User:     env.Config["postgres"],
-			Password: env.Config["password"],
-			Database: env.Config["database"],
+			Host:     env.Config.DatabaseHost,
+			Port:     env.Config.DatabasePort,
+			User:     env.Config.DatabaseUser,
+			Password: env.Config.DatabasePassword,
+			Database: env.Config.DatabaseSpace,
 			Logger:   env.Logger,
 		},
 		MaxConnections: 8, // именно во столько будет проводиться нагрузочное тестирование.
@@ -58,18 +56,18 @@ func main() {
 		// Компилируем sql запросы для каждого соединения после их установления.
 		AfterConnect: env.Prep.Execute,
 	})
-
 	if err != nil {
 		log.Crit("Unable to create connection pool", "error", err)
 		os.Exit(1)
 	}
 	env.ConnPool = &accessor.ConnPool{ConnPool: *pool}
 	defer env.ConnPool.Close()
-	// регистируем обработчики Url
-	env.Router = router.RegisterHandlers(&env)
-	env.Logger.Log(pgx.LogLevelInfo, "Server started on http://127.0.0.1:8080/", map[string]interface{}{})
 
-	// закончена инициализация global_environment.
-	// cлушаем на порту 8080.
-	log.Error(fasthttp.ListenAndServe(":8080", env.Router.Handler).Error()) // TODO: graceful shutdown
+	// Регистируем обработчики Url.
+	env.Router = router.RegisterHandlers(&env)
+
+	// Запускаем сервер.
+	serverPort := ":" + strconv.Itoa(int(env.Config.ServerPort))
+	log.Debug("Server started on http://[::1]:"+serverPort+"/")
+	log.Error(fasthttp.ListenAndServe(serverPort, env.Router.Handler).Error())
 }
