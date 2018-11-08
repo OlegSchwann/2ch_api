@@ -36,9 +36,8 @@ const (
 	StatusInternalServerError
 )
 
-func (cp *ConnPool) UserUpdateProfile(user types.User) (
+func (cp *ConnPool) UserUpdateProfile(user types.UserUpdate) (
 	err error, responseUser types.User, status int) {
-
 	err = cp.QueryRow("UserUpdateProfile",
 		user.Nickname, user.About, user.Email, user.Fullname).Scan(
 		&responseUser.Nickname, &responseUser.About, &responseUser.Email, &responseUser.Fullname)

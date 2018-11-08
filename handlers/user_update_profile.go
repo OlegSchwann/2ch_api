@@ -9,8 +9,7 @@ import (
 )
 
 func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
-	nickname := ctx.UserValue("nickname").(string)
-	requestUser := types.User{}
+	requestUser := types.UserUpdate{}
 	err := requestUser.UnmarshalJSON(ctx.Request.Body())
 	if err != nil {
 		response, _ := types.Error{
@@ -20,7 +19,7 @@ func (e *Environment) UserUpdateProfile(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetStatusCode(http.StatusBadRequest)
 		return
 	}
-	requestUser.Nickname = nickname
+	requestUser.Nickname = ctx.UserValue("nickname").(string)
 	err, responseUser, status := e.ConnPool.UserUpdateProfile(requestUser)
 	switch status {
 	case accessor.StatusOk:
