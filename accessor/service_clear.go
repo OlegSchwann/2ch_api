@@ -8,7 +8,8 @@ truncate table only
   "forum",
   "thread",
   "vote",
-  "post"
+  "post",
+  "user_in_forum"
 restart identity restrict;`
 	_, err = cp.Exec(sql)
 	return

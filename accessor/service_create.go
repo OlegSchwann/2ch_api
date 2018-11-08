@@ -121,6 +121,59 @@ create unique index if not exists
   "post_materialized_path_patent_tree_sort"
 on "post" ("thread_id", substring("materialized_path" from 1 for 6) desc, substring("materialized_path" from 8) asc);
 
+-- Денормализованная таблица - пользователи, оставившие запись в этом форуме(в thread или post).
+-- при вставке в thread и post добавляется значение.
+create table if not exists "user_in_forum"(
+  "forum"    citext                   not null references "forum"("slug"),
+  "nickname" citext collate ucs_basic not null references "user"("nickname")
+);
+
+create unique index if not exists "user_in_forum_index"
+on "user_in_forum"("forum", "nickname");
+
+-- При добавлении в threads добавляем пользоватля в список пользователей этого форума,
+-- удаление не предусмотрено.
+create or replace function "user_in_forum_on_create_thread"() returns trigger as $$
+begin
+  insert into "user_in_forum"(
+    "forum",
+    "nickname"
+  ) values (
+	new."forum",
+    new."author"
+  ) on conflict do nothing;
+  return null;
+end
+$$ language plpgsql;
+
+drop trigger if exists "user_in_forum_on_create_thread_trigger" on "thread";
+
+create trigger "user_in_forum_on_create_thread_trigger" 
+after insert on "thread"
+for each row 
+execute procedure "user_in_forum_on_create_thread"();
+-- При добавлении в posts добавляем пользоватля в список пользователей этого форума.
+
+create or replace function "user_in_forum_on_create_post"() returns trigger as $$
+begin
+  insert into "user_in_forum"(
+    "forum",
+    "nickname"
+  ) values (
+	new."forum",
+    new."author"
+  ) on conflict do nothing;
+  return null;
+end
+$$ language plpgsql;
+
+drop trigger if exists "user_in_forum_on_create_post_trigger" on "post";
+
+create trigger "user_in_forum_on_create_post_trigger" 
+after insert on "post"
+for each row 
+execute procedure "user_in_forum_on_create_post"();
+
 commit;`
 /* Структура для быстрого нахождения дерева коммкетариев:
 количество потомков - количество реальных потомков, первоначально равно 0.

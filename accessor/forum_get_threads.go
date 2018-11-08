@@ -11,17 +11,32 @@ func init() {
 	Prep.add(func(conn *pgx.Conn) (err error) {
 		// language=PostgreSQL
 		sql := `
-select
-  count(*)
-from
-  "forum"
-where
-  "slug" = $1
-;
-`
+select exists(
+  select
+    true 
+  from
+    "forum"
+  where
+    "slug" = $1
+);`
 		_, err = conn.Prepare("ForumGetThreadsCheckForumExist", sql)
 		return
 	})
+}
+
+func (cp *ConnPool) ForumGetThreadsCheckForumExist(forumSlug string) (exist bool, err error) {
+	err = cp.QueryRow("ForumGetThreadsCheckForumExist", forumSlug).Scan(&exist)
+	if err != nil {
+		err = &Error{
+			Code:            http.StatusInternalServerError,
+			UnderlyingError: err,
+		}
+		return
+	}
+	return
+}
+
+func init() {
 	Prep.add(func(conn *pgx.Conn) (err error) {
 		// language=PostgreSQL
 		sql := `
@@ -74,23 +89,16 @@ limit
 
 func (cp *ConnPool) ForumGetThreads(slug string, limit int, since time.Time, desc bool) (
 	threads types.Threads, err error) {
-	{
-		forumCount := 0
-		err = cp.QueryRow("ForumGetThreadsCheckForumExist", slug).Scan(&forumCount)
-		if err != nil {
-			err = &Error{
-				Code:            http.StatusInternalServerError,
-				UnderlyingError: err,
-			}
-			return
+	exist, err := cp.ForumGetThreadsCheckForumExist(slug)
+	if err != nil {
+		return
+	}
+	if !exist {
+		err = &Error{
+			Code:            http.StatusNotFound,
+			UnderlyingError: nil,
 		}
-		if forumCount == 0 {
-			err = &Error{
-				Code:            http.StatusNotFound,
-				UnderlyingError: nil,
-			}
-			return
-		}
+		return
 	}
 	var rows *pgx.Rows
 	if desc {
