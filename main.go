@@ -9,6 +9,7 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/OlegSchwann/2ch_api/accessor"
@@ -29,9 +30,11 @@ func main() {
 
 	// Парсим конфиг из файла config.json, что лежит рядом с бинарником,
 	// в репозитории это 'github.com/OlegSchwann/2ch_api/_build_configs/config.json'
-	configBytes, err := ioutil.ReadFile("./config.json")
+	ex, _ := os.Executable()
+	confFilepath := filepath.Join(filepath.Dir(ex), "config.json")
+	configBytes, err := ioutil.ReadFile(confFilepath)
 	if err != nil {
-		log.Crit("unable to open configuration file ./config.json : "+
+		log.Crit("unable to open configuration file '"+confFilepath+"': "+
 			"are you sure it is near this executable file? : "+err.Error())
 		os.Exit(1)
 	}
