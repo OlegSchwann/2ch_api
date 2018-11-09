@@ -27,7 +27,8 @@ func main() {
 	// агрегатор SQL выражений, которые надо подготовить в базе данных.
 	env.Prep = &accessor.Prep
 
-	// Парсим конфиг из файла config.json, что лежит рядом с бинарником.
+	// Парсим конфиг из файла config.json, что лежит рядом с бинарником,
+	// в репозитории это 'github.com/OlegSchwann/2ch_api/_build_configs/config.json'
 	configBytes, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		log.Crit("unable to open configuration file ./config.json : "+

@@ -1,8 +1,8 @@
 {
   "DatabaseHost":     "127.0.0.1",
   "DatabasePort":     5432,
-  "DatabaseUser":     "postgres",
+  "DatabaseUser":     "server",
   "DatabasePassword": "",
-  "DatabaseSpace":    "postgres",
+  "DatabaseSpace":    "server",
   "ServerPort":       5000
 }
