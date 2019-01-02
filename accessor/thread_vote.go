@@ -50,6 +50,7 @@ func (cp *ConnPool) ThreadVoteGetThreadIdBySlug(threadSlug string) (threadId int
 //⎣возвращая thread;      ⎦
 
 func init() {
+	// TODO: оптимизировать?
 	Prep.add(func(conn *pgx.Conn) (err error) {
 		// language=PostgreSQL
 		sql := `
@@ -161,6 +162,7 @@ func (cp *ConnPool) ThreadVoteUpdateVote(nickname string, voice int8, threadId i
 
 // Oбновляем денормализованное значение суммы голосов в строке конкретного треда.
 func init() {
+	// TODO: оптимизировать.
 	Prep.add(func(conn *pgx.Conn) (err error) {
 		// language=PostgreSQL
 		sql := `

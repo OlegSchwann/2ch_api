@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"github.com/OlegSchwann/2ch_api/accessor"
-	"github.com/OlegSchwann/2ch_api/shared_helpers"
-	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/shared_helpers"
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
@@ -21,7 +22,8 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 		ctx.Response.Header.SetStatusCode(http.StatusUnprocessableEntity)
 		return
 	}
-	// вытаскиваем связанный thread, отдаём 404 если нет подобного, и сразу 201 если передан пустой массив.
+
+	// вытаскиваем связанный thread, отдаём 404, если такого нет.
 	thread := types.Thread{}
 	{
 		slugOrId := ctx.UserValue("slug_or_id").(string)
@@ -49,12 +51,12 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
-	{
-		if len(posts) == 0 {
-			ctx.WriteString("[]")
-			ctx.Response.Header.SetStatusCode(http.StatusCreated)
-			return
-		}
+
+	// Отдаём сразу 201, если требуется записать пустой массив постов.
+	if len(posts) == 0 {
+		ctx.WriteString("[]")
+		ctx.Response.Header.SetStatusCode(http.StatusCreated)
+		return
 	}
 
 	// собираем информацию о родительских постах.
@@ -85,13 +87,17 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 
 		}
 	}
+
 	// Тут гонка данных.
-	// Горутина считывает количество детей, формирует материализованные пути и при записи новых строк увеличивает количество детей.
-	// если кто-то другой считает количество в промежутке, и попытается записать материализованные пути, то упадём с ошибкой уникальности материализованного путию
-	// это произойдёт, если только если попытаться добавить ответы к одному узлу одновременно.
-	// пессимистичное решение - блокировать в момент чтения строку с постом или тредом.
-	// оптимистичное решение - в случае падения пересчитывать материализованные пути. (spin lock, пробовать вставить, поа не получится.)
-	// сейчас считаем, что к одному узлу в разных потоках едва ли будут добавлять, применяем оптимистичное решение.
+	// Горутина считывает количество детей, формирует материализованные пути и при записи новых
+	// строк увеличивает количество детей. Если кто-то другой считает количество в промежутке,
+	// и попытается записать материализованные пути, то упадём с ошибкой уникальности
+	// материализованного пути. Это произойдёт, если только если попытаться добавить ответы к
+	// одному узлу одновременно. Пессимистичное решение - блокировать в момент чтения строку с
+	// постом или тредом. Оптимистичное решение - в случае падения пересчитывать
+	// материализованные пути. (spin lock, пробовать вставить, поа не получится.) Пока проходит
+	// тесты при заполнении, не падает. Сейчас считаем, что к одному узлу в разных потоках едва ли
+	// будут добавлять, применяем оптимистичное решение.
 
 	// собираем "materialized_path" для вставляемых постов, обновляем "number_of_children" у родителей.
 	{
@@ -142,6 +148,13 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
+
+	// Делаем то, что раньше делалось триггером -
+	// в таблицу "user_in_forum" добавляем всех пользователей - авторов постов.
+	for _, post := range posts {
+		e.ConnPool.InsertIntoUserInForum(post.Forum, post.Author)
+	}
+	
 	response, _ := responsePosts.MarshalJSON()
 	ctx.Write(response)
 	ctx.Response.Header.SetStatusCode(http.StatusCreated)

@@ -103,6 +103,7 @@ func (cp *ConnPool) ForumGetUsers(forumSlug string, limit int, desc bool) (users
 	} else {
 		rows, err = cp.Query("ForumGetUsersAsc", forumSlug, limit)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code: http.StatusInternalServerError,
@@ -110,7 +111,6 @@ func (cp *ConnPool) ForumGetUsers(forumSlug string, limit int, desc bool) (users
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		user := types.User{}
 		err = rows.Scan(&user.Nickname, &user.About, &user.Email, &user.Fullname)
@@ -133,6 +133,7 @@ func (cp *ConnPool) ForumGetUsersSince(forumSlug string, limit int, sinceNicknam
 	} else {
 	  	rows, err = cp.Query("ForumGetUsersAscSince", forumSlug, sinceNickname, limit)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code: http.StatusInternalServerError,
@@ -140,7 +141,6 @@ func (cp *ConnPool) ForumGetUsersSince(forumSlug string, limit int, sinceNicknam
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
         user := types.User{}
 		err = rows.Scan(&user.Nickname, &user.About, &user.Email, &user.Fullname)

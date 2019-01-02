@@ -66,6 +66,7 @@ func (cp *ConnPool) ThreadGetPostsFlatSort(threadId int, limit int, desc bool) (
 	} else {
 		rows, err = cp.Query("ThreadGetPostsFlatSortAsc", threadId, limit)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -73,7 +74,6 @@ func (cp *ConnPool) ThreadGetPostsFlatSort(threadId int, limit int, desc bool) (
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum)
@@ -147,6 +147,7 @@ func (cp *ConnPool) ThreadGetPostsFlatSince(threadId int, limit int, since int, 
 	} else {
 		rows, err = cp.Query("ThreadGetPostsFlatSinceSortAsc", threadId, since, limit)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -154,7 +155,6 @@ func (cp *ConnPool) ThreadGetPostsFlatSince(threadId int, limit int, since int, 
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum)
@@ -234,6 +234,7 @@ func (cp *ConnPool) ThreadGetPostsTree(threadId int, limit int, desc bool) (post
 	} else {
 		rows, err = cp.Query("ThreadGetPostsTreeSortAsc", threadId, limit)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -241,7 +242,6 @@ func (cp *ConnPool) ThreadGetPostsTree(threadId int, limit int, desc bool) (post
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum)
@@ -327,6 +327,7 @@ func (cp *ConnPool) ThreadGetPostsTreeSince(threadId int, limit int, since int, 
 	} else {
 		rows, err = cp.Query("ThreadGetPostsTreeSinceSortAsc", threadId, since, limit)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -334,7 +335,6 @@ func (cp *ConnPool) ThreadGetPostsTreeSince(threadId int, limit int, since int, 
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum)
@@ -402,6 +402,7 @@ func (cp *ConnPool) ThreadGetPostsParentTreeSortAsc(threadId int, limit int) (
 	// материализованный путь первого поста, когда не задан since
 	materializedPathDown = shared_helpers.ZeroPad(uint(limit+1), 6)
 	rows, err := cp.Query("ThreadGetPostsParentTreeSortAsc", threadId, materializedPathUp, materializedPathDown)
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -409,7 +410,6 @@ func (cp *ConnPool) ThreadGetPostsParentTreeSortAsc(threadId int, limit int) (
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum, &post.MaterializedPath)
@@ -587,6 +587,7 @@ func (cp *ConnPool) ThreadGetPostsParentTreeSortDesc(threadId int, limit int) (
 	materializedPathUp := shared_helpers.ZeroPad(uint(pathUp), 6)
 
 	rows, err := cp.Query("ThreadGetPostsParentTreeSortDesc", threadId, materializedPathUp, materializedPathDown)
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -594,7 +595,6 @@ func (cp *ConnPool) ThreadGetPostsParentTreeSortDesc(threadId int, limit int) (
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum)
@@ -631,6 +631,7 @@ func (cp *ConnPool) ThreadGetPostsParentTreeSinceSortDesc(threadId int, limit in
 	materializedPathUp := shared_helpers.ZeroPad(uint(pathUp), 6)
 
 	rows, err := cp.Query("ThreadGetPostsParentTreeSortDesc", threadId, materializedPathUp, materializedPathDown)
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -638,7 +639,6 @@ func (cp *ConnPool) ThreadGetPostsParentTreeSinceSortDesc(threadId int, limit in
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		post := types.Post{}
 		err = rows.Scan(&post.ThreadId, &post.Author, &post.Created, &post.Id, &post.IsEdited, &post.Message, &post.Parent, &post.Forum)

@@ -3,6 +3,7 @@ package accessor
 import (
 	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/jackc/pgx"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -121,6 +122,7 @@ where id in (`))
 	buffer.Write([]byte(");"))
 
 	rows, err := cp.Query(buffer.String())
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -128,7 +130,6 @@ where id in (`))
 		}
 		return
 	}
-	defer rows.Close()
 
 	postConnections = make(PostConnections)
 	for rows.Next() {
@@ -146,33 +147,6 @@ where id in (`))
 	}
 	return
 }
-
-// QuoteString escapes and quotes a string making it safe for interpolation into an SQL string.
-func quoteString(input string) (output string) {
-	output = "'" + strings.Replace(input, "'", "''", -1) + "'"
-	return
-}
-
-/* общий вид исполняемого запроса:
-begin transaction; -- в одной транзакции
-update "thread" set "number_of_children" = ? where "id" = ?;
-
-update "post" set "number_of_children" = ? where "id" = ?; -- столько же раз, сколько и постов.
-update "post" set "number_of_children" = ? where "id" = ?; --
-
-insert into "post"(
-"thread_id",
-"author",
-"created",
-"message",
-"parent",
-"forum",
-"thread_slug",
-"materialized_path",
-"number_of_children"
-) values (?, ?, ?, ?, ?, ?, ?, ?, ?),
-	 (?, ?, ?, ?, ?, ?, ?, ?, ?); -- все вставки постов одном выражении
-commit; */
 
 func init() {
 	Prep.add(func(conn *pgx.Conn) (err error) {
@@ -241,15 +215,6 @@ func (cp *ConnPool) PostsCreateInsert(
 	// всё добавление постов в одну транзакцию.
 
 	tx, err := cp.Begin()
-	defer func() { // необходимо быть уверенным, что транзакция завершится.
-		if err != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
-		}
-		return
-	}()
-
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -257,6 +222,19 @@ func (cp *ConnPool) PostsCreateInsert(
 		}
 		return
 	}
+
+	defer func() { // необходимо быть уверенным, что транзакция завершится.
+		if err != nil {
+			txErr := tx.Rollback()
+			if txErr != nil {
+				err = errors.Wrap(err, txErr.Error())
+			}
+		} else {
+			err = tx.Commit()
+		}
+		return
+	}()
+
 	_, err = tx.Exec("PostCreateUpdateThreadNumberOfChildren", tread.NumberOfChildren, tread.Id)
 	if err != nil {
 		err = &Error{
@@ -275,6 +253,7 @@ func (cp *ConnPool) PostsCreateInsert(
 			return
 		}
 	}
+	// TODO: переписать на batch.
 	for _, post := range posts {
 		responsePost := types.Post{}
 		err = tx.QueryRow(
@@ -364,3 +343,27 @@ func (cp *ConnPool) PostsCreateInsert(
 //   "forum" -- берётся из "thread"."forum"
 //   "materialized_path"
 //   "number_of_children" -- важно обновить для родительского сообщения.
+
+func init() {
+	Prep.add(func(conn *pgx.Conn) (err error) {
+		// language=PostgreSQL
+		sql := `
+insert into "user_in_forum"(
+  "forum",
+  "nickname"
+) values (
+  $1,
+  $2
+);`
+		_, err = conn.Prepare("InsertIntoUserInForum", sql)
+		return err
+	})
+}
+
+// При добавлении в posts добавляем пользоватля в список пользователей этого форума.
+// Просто пытаемся добавить автора поста к списку пользователей этого форума.
+// Ошибку не уникальности не обрабатываем.
+func (cp *ConnPool) InsertIntoUserInForum(forum string, nickname string)(err error){
+	_, err = cp.Exec("InsertIntoUserInForum", forum, nickname)
+	return
+}

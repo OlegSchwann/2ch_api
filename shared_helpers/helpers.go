@@ -12,7 +12,7 @@ func ZeroPad(integer uint, overallLen int) string {
 }
 
 // объявляет функцию, как возврающую json
-func ContentTypeJson(wrapped func(ctx *fasthttp.RequestCtx) ()) (func(ctx *fasthttp.RequestCtx) ()) {
+func SetContentTypeJson(wrapped func(ctx *fasthttp.RequestCtx) ()) (func(ctx *fasthttp.RequestCtx) ()) {
 	return func(ctx *fasthttp.RequestCtx) () {
 		ctx.Response.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		wrapped(ctx)

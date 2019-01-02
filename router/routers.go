@@ -8,7 +8,7 @@ import (
 )
 
 // Middleware
-var m1 = shared_helpers.ContentTypeJson
+var m1 = shared_helpers.SetContentTypeJson
 // var m2 = shared_helpers.Recover
 
 func RegisterHandlers(environment *global_environment.Environment) (router *fasthttprouter.Router) {

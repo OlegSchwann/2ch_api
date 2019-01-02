@@ -152,27 +152,6 @@ create trigger "user_in_forum_on_create_thread_trigger"
 after insert on "thread"
 for each row 
 execute procedure "user_in_forum_on_create_thread"();
--- При добавлении в posts добавляем пользоватля в список пользователей этого форума.
-
-create or replace function "user_in_forum_on_create_post"() returns trigger as $$
-begin
-  insert into "user_in_forum"(
-    "forum",
-    "nickname"
-  ) values (
-	new."forum",
-    new."author"
-  ) on conflict do nothing;
-  return null;
-end
-$$ language plpgsql;
-
-drop trigger if exists "user_in_forum_on_create_post_trigger" on "post";
-
-create trigger "user_in_forum_on_create_post_trigger" 
-after insert on "post"
-for each row 
-execute procedure "user_in_forum_on_create_post"();
 
 commit;`
 /* Структура для быстрого нахождения дерева коммкетариев:

@@ -106,6 +106,7 @@ func (cp *ConnPool) ForumGetThreads(slug string, limit int, since time.Time, des
 	} else {
 		rows, err = cp.Query("ForumGetThreadsSortedAsc", slug, limit, since)
 	}
+	defer rows.Close()
 	if err != nil {
 		err = &Error{
 			Code:            http.StatusInternalServerError,
@@ -113,7 +114,6 @@ func (cp *ConnPool) ForumGetThreads(slug string, limit int, since time.Time, des
 		}
 		return
 	}
-	defer rows.Close()
 	for rows.Next() {
 		if err = rows.Err(); err != nil {
 			err = &Error{
