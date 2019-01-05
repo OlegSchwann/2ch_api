@@ -84,7 +84,12 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 		err := error(nil)
 		postsConnections, err = e.ConnPool.PostCreateGetParentPosts(parentIds)
 		if err != nil {
-
+			response, _ := types.Error{
+				Message: "Error in PostCreateGetParentPosts: " + err.Error(),
+			}.MarshalJSON()
+			ctx.Write(response)
+			ctx.Response.Header.SetStatusCode(http.StatusNotFound)
+			return
 		}
 	}
 
@@ -126,11 +131,21 @@ func (e *Environment) PostsCreate(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	// теперь все данные собраны, надо вставить в базу, за одну транзакцию
-	// обновить количество детей у треда, родительских постов и вставить сами посты.
+	// Данные собраны, надо вставить в базу, за одну транзакцию и 1 round trip.
+	// Самое нагруженное место при заполнении.
+	// Надо обновить количество детей у родительских постов/треда и вставить посты
+	// ( + пересчитать индексы).
 	responsePosts, err := e.ConnPool.PostsCreateInsert(thread, postsConnections, posts)
 	if err != nil { // TODO: обработка гонки данных при сборке materialised_path, логика retry.
-		accessorError := err.(*accessor.Error)
+		accessorError, ok  := err.(*accessor.Error)
+		if !ok {
+			response, _ := types.Error{
+				Message: "Server error, fail cast err.(*accessor.Error): " + err.Error(),
+			}.MarshalJSON()
+			ctx.Write(response)
+			ctx.Response.Header.SetStatusCode(http.StatusInternalServerError)
+			return
+		}
 		if accessorError.Code == http.StatusNotFound {
 			response, _ := types.Error{
 				Message: "Not found: " + err.Error(),

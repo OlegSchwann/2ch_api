@@ -1,7 +1,6 @@
 package accessor
 
 import (
-	"fmt"
 	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/jackc/pgx"
 	"net/http"
@@ -76,10 +75,7 @@ func (cp *ConnPool) ThreadCreate(thread types.Thread) (realThread types.Thread, 
 		thread.Author, thread.Created, thread.Forum /*id*/, thread.Message, thread.Slug, thread.Title /*votes*/).Scan(
 		&realThread.Author, &realThread.Created, &realThread.Forum, &realThread.Id, &realThread.Message, &realThread.Slug, &realThread.Title, &realThread.Votes)
 	if err != nil {
-
-		fmt.Printf("\n\n%#v\n%s\n", err, err.Error())
 		pgxPgError := err.(pgx.PgError)
-
 		if pgxPgError.Code == "23502" {
 			err = &Error{
 				Code:            http.StatusNotFound,

@@ -1,7 +1,6 @@
 package accessor
 
 import (
-	"fmt"
 	"github.com/jackc/pgx"
 	"net/http"
 
@@ -68,9 +67,6 @@ func (cp *ConnPool) ForumCreate(forum types.Forum) (returnForum types.Forum, err
 	err = cp.QueryRow("ForumCreate", forum.Slug, forum.Title, forum.User).Scan(
 		&returnForum.Slug, &returnForum.Title, &returnForum.User)
 	if err != nil {
-
-		fmt.Printf("\n\n%#v\n\n", err)
-
 		pgError := err.(pgx.PgError)
 		if pgError.Code == "23505" { // duplicate key value violates unique constraint
 			err = &Error{

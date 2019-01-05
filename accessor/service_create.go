@@ -76,14 +76,15 @@ create unique index if not exists "vote_nickname_id_unique" on "vote" ("nickname
 
 -- Посты в ветке обсуждения на форуме.
 create table if not exists "post" (
-  "thread_id"          integer                  not null references "thread" ("id"),
+  "thread_id"          integer                  not null, -- references "thread" ("id"), но проверять при вставке слишком дорого
     -- Идентификатор ветки (id) обсуждения.
   "author"             citext                   not null references "user" ("nickname"),
     -- Автор, написавший данное сообщение.
   "created"            timestamp with time zone not null,
     -- Дата создания сообщения на форуме.
-  "id"                 serial8 primary key,
+  "id"                 bigint primary key,
     -- Идентификатор данного сообщения.
+    -- В целях оптимизации id приходит вместе со всеми данными.
   "is_edited"          boolean                  not null default false,
     -- Истина, если данное сообщение было изменено.
   "message"            text                     not null,
@@ -93,9 +94,9 @@ create table if not exists "post" (
     -- references "post" ("id") сделать нельзя из-за 0.
 
 -- Не нормализованые поля, поддерживаются триггером:
-  "forum"              citext                   not null references "forum" ("slug"),
+  "forum"              citext                   not null, -- references "forum" ("slug"), но проверять при вставке слишком дорого.
     -- Идентификатор форума (slug) данного сообещния.
-  "thread_slug"        citext                   not null,  -- references "thread" (slug) нельзя сделать через sql - slug не уникаен, есть множество slug = ''
+  "thread_slug"        citext                   not null, -- references "thread" (slug) нельзя сделать через sql - slug не уникаен, есть множество slug = '' + проверять слишком дорого.
     -- Идентификатор ветки (slug) обсуждения, опционально, может быть равна ''.
     -- Однако запрос может содержать "thread_slug", а не "thread_id", триггером надо восстановить последнее.
   "materialized_path"  text                     not null,
@@ -104,22 +105,28 @@ create table if not exists "post" (
     -- Количество детей для быстрого вычисления материализованного пути потомка.
 );
 
+-- Для генерации "post"."id", но для оптимизации значения отсюда берутся сразу.
+create sequence if not exists "post_id_seq"
+  increment by 1000
+  no cycle
+  owned by "post"."id";
+
 -- для сортировке комментариев по вложенности (tree)
 -- отлавливает неверные материализованные пути, появляющиеся при гонке данных.
-create unique index if not exists
-  "post_materialized_path_tree_sort"
-on "post" ("thread_id", "materialized_path");
-
-
--- для сортировки комментариев по дате (flat)
-create unique index if not exists
-  "post_materialized_path_flat_sort"
-on "post" ("thread_id", "id");
-
--- для сортировки комментариев по вложенности внутри первого слоя 
-create unique index if not exists
-  "post_materialized_path_patent_tree_sort"
-on "post" ("thread_id", substring("materialized_path" from 1 for 6) desc, substring("materialized_path" from 8) asc);
+-- create unique index if not exists
+--   "post_materialized_path_tree_sort"
+-- on "post" ("thread_id", "materialized_path");
+-- 
+-- 
+-- -- для сортировки комментариев по дате (flat)
+-- create unique index if not exists
+--   "post_materialized_path_flat_sort"
+-- on "post" ("thread_id", "id");
+-- 
+-- -- для сортировки комментариев по вложенности внутри первого слоя 
+-- create unique index if not exists
+--   "post_materialized_path_patent_tree_sort"
+-- on "post" ("thread_id", substring("materialized_path" from 1 for 6) desc, substring("materialized_path" from 8) asc);
 
 -- Денормализованная таблица - пользователи, оставившие запись в этом форуме(в thread или post).
 -- при вставке в thread и post добавляется значение.

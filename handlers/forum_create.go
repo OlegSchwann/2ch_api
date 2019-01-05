@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/valyala/fasthttp"
 	"net/http"
 
@@ -25,9 +24,6 @@ func (e *Environment) ForumCreate(ctx *fasthttp.RequestCtx) {
 	}
 
 	responseForum, err := e.ConnPool.ForumCreate(requestForum)
-
-	fmt.Printf("\n\n%#v %#v\n\n", responseForum, err)
-
 	if err != nil {
 		accessorError := err.(*accessor.Error)
 		if accessorError.Code == http.StatusConflict {

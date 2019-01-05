@@ -1,6 +1,7 @@
 package accessor
 
 import (
+	"context"
 	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
@@ -181,6 +182,7 @@ insert into "post" (
   "thread_id",
   "author",            
   "created",
+  "id",                  
   "message",           
   "parent",
   "forum",
@@ -189,22 +191,23 @@ insert into "post" (
 ) values (
   $1,  	
   $2,
-  $3,
+  $3,         
   $4,
   $5,
   $6,
   $7,
-  $8
-) returning
-  "author",
-  "created",
-  "forum",
-  "id",
-  "message",
-  "parent",
-  "thread_id"
-;`
+  $8,
+  $9
+);`
 		_, err = conn.Prepare("PostCreateInsertOnePost", sql)
+		return err
+	})
+	Prep.add(func(conn *pgx.Conn) (err error) {
+		// language=PostgreSQL
+		sql := `
+SELECT nextval('post_id_seq');
+` // возвращает новое значение c шагом в 1000
+		_, err = conn.Prepare("PostCreatePromotePostIdSequence", sql)
 		return err
 	})
 }
@@ -225,10 +228,7 @@ func (cp *ConnPool) PostsCreateInsert(
 
 	defer func() { // необходимо быть уверенным, что транзакция завершится.
 		if err != nil {
-			txErr := tx.Rollback()
-			if txErr != nil {
-				err = errors.Wrap(err, txErr.Error())
-			}
+			_ = tx.Rollback()
 		} else {
 			err = tx.Commit()
 		}
@@ -253,43 +253,80 @@ func (cp *ConnPool) PostsCreateInsert(
 			return
 		}
 	}
-	// TODO: переписать на batch.
+
+	if len(posts) > 999 {
+		err = &Error{
+			Code:            http.StatusInternalServerError,
+			UnderlyingError: errors.New("posts length over 1000, more then 'post_id_seq' step"),
+		}
+		return
+	}
+	var firsPostUniqueId int
+	err = tx.QueryRow("PostCreatePromotePostIdSequence").Scan(&firsPostUniqueId)
+	if err != nil {
+		err = &Error{
+			Code:            http.StatusInternalServerError,
+			UnderlyingError: err,
+		}
+		return
+	}
+	for i := 0; i < len(posts); i++ {
+		posts[i].Id = firsPostUniqueId + i
+	}
+
+	batch := tx.BeginBatch()
 	for _, post := range posts {
-		responsePost := types.Post{}
-		err = tx.QueryRow(
+		batch.Queue(
 			"PostCreateInsertOnePost",
-			post.ThreadId,
-			post.Author,
-			post.Created,
-			post.Message,
-			post.Parent,
-			post.Forum,
-			post.ThreadSlug,
-			post.MaterializedPath).Scan(
-			&responsePost.Author,
-			&responsePost.Created,
-			&responsePost.Forum,
-			&responsePost.Id,
-			&responsePost.Message,
-			&responsePost.Parent,
-			&responsePost.ThreadId)
+			[]interface{}{
+				post.ThreadId,
+				post.Author,
+				post.Created,
+				post.Id,
+				post.Message,
+				post.Parent,
+				post.Forum,
+				post.ThreadSlug,
+				post.MaterializedPath,
+			},
+			nil,
+			nil)
+	}
+	responsePosts = posts
+
+	err = batch.Send(context.Background(), nil)
+	if err != nil {
+		err = &Error{
+			Code:            http.StatusInternalServerError,
+			UnderlyingError: err,
+		}
+		return
+	}
+
+	for i := 0; i < len(posts); i++ {
+		_, err = batch.ExecResults()
 		if err != nil {
-			pgxPgError := err.(pgx.PgError)
-			if pgxPgError.Code == "23503" {
-				// Insert or update on table "post" violates foreign key constraint "post_author_fkey"
+			if err.(pgx.PgError).Code == "23503" { // insert or update on table "post" violates foreign key constraint "post_author_fkey"
 				err = &Error{
 					Code:            http.StatusNotFound,
 					UnderlyingError: err,
 				}
-			} else {
-				err = &Error{
-					Code:            http.StatusInternalServerError,
-					UnderlyingError: err,
-				}
+				return
+			}
+			err = &Error{
+				Code:            http.StatusInternalServerError,
+				UnderlyingError: err,
 			}
 			return
 		}
-		responsePosts = append(responsePosts, responsePost)
+	}
+
+	err = batch.Close()
+	if err != nil {
+		err = &Error{
+			Code:            http.StatusInternalServerError,
+			UnderlyingError: err,
+		}
 	}
 	return
 }

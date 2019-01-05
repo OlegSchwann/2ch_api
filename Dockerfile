@@ -38,7 +38,18 @@ RUN go build -o "${GOPATH}/bin/2ch_api" 'github.com/OlegSchwann/2ch_api'
 # Кладём конфиг рядом с сервером. Пример конфига 'github.com/OlegSchwann/2ch_api/_build_configs/config.json'
 RUN echo '{"DatabaseHost": "127.0.0.1", "DatabasePort": 5432, "DatabaseUser": "docker", "DatabasePassword": "docker", "DatabaseSpace": "docker", "ServerPort": 5000}' > "${GOPATH}/bin/config.json" && \
     echo "host all all 0.0.0.0/0 md5" >> "/etc/postgresql/${PGVER}/main/pg_hba.conf" && \
-    printf "\n listen_addresses = '*' \n fsync = off \n synchronous_commit = off \n full_page_writes = off \n autovacuum = off \n wal_level = minimal \n max_wal_senders = 0 \n wal_writer_delay = 2000ms \n shared_buffers = 512MB \n effective_cache_size = 1024MB \n work_mem = 16MB \n" >> \
+    printf "\n\
+fsync                = 'off'     \n\
+synchronous_commit   = 'off'     \n\
+full_page_writes     = 'off'     \n\
+autovacuum           = 'off'     \n\
+wal_level            = 'minimal' \n\
+max_wal_senders      = '0'       \n\
+wal_writer_delay     = '2000ms'  \n\
+shared_buffers       = '512MB'   \n\
+effective_cache_size = '1024MB'  \n\
+work_mem             = '16MB'    \n\
+log_min_messages     = 'panic'   \n" >> \
     "/etc/postgresql/${PGVER}/main/postgresql.conf"
 
 # Публикуем порт сервера наружу.

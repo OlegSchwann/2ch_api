@@ -20,8 +20,13 @@ func main() {
 	// Создаём хранилище глобальных переменных.
 	env := global_environment.Environment{}
 
-	// Инициализируем логгер, результаты выводятся в stdout.
-	env.Logger = log15adapter.NewLogger(log.New("module", "pgx"))
+	if false {
+		// Инициализируем логгер, результаты выводятся в stdout.
+		env.Logger = log15adapter.NewLogger(log.New("module", "pgx"))
+	} else {
+		// передаём пустышку.
+		env.Logger = &LoggerStub{}
+	}
 
 	// Вытаскиваем статический объект пакета,
 	// агрегатор SQL выражений, которые надо подготовить в базе данных.
@@ -74,4 +79,9 @@ func main() {
 	serverPort := ":" + strconv.Itoa(int(env.Config.ServerPort))
 	log.Debug("Server started on http://[::1]:"+serverPort+"/")
 	log.Error(fasthttp.ListenAndServe(serverPort, env.Router.Handler).Error())
+}
+
+type LoggerStub struct {}
+func (LoggerStub) Log(level pgx.LogLevel, msg string, data map[string]interface{}){
+	// Выйти, не тратя процессорное время на запись ненужных строк.
 }

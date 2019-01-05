@@ -1,15 +1,15 @@
 package global_environment
 
 import (
-	"github.com/OlegSchwann/2ch_api/types"
 	"github.com/buaazp/fasthttprouter"
-	log "github.com/jackc/pgx/log/log15adapter"
+	"github.com/jackc/pgx"
 
 	"github.com/OlegSchwann/2ch_api/accessor"
+	"github.com/OlegSchwann/2ch_api/types"
 )
 
 type Environment struct {
-	Logger   *log.Logger
+	Logger   pgx.Logger
 	ConnPool *accessor.ConnPool
 	Prep     *accessor.Preparer
 	Config   types.Config
